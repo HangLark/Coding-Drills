@@ -1,27 +1,56 @@
 import js from '@eslint/js'
+import eslintConfigPrettier from 'eslint-config-prettier/flat'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
-import { defineConfig } from 'eslint/config'
-import prettierRecommended from 'eslint-plugin-prettier/recommended'
+import { defineConfig, globalIgnores } from 'eslint/config'
 
-export default defineConfig([
-  { files: ['**/*.{js,mjs,cjs,ts,mts,cts}'], plugins: { js }, extends: ['js/recommended'] },
-  { files: ['**/*.{js,mjs,cjs,ts,mts,cts}'], languageOptions: { globals: globals.node } },
-  tseslint.configs.recommended,
-  prettierRecommended,
-  // 添加自定义规则配置
+export default defineConfig(
+  globalIgnores(
+    ['dist/**', 'coverage/**', '.pnpm-store/**'],
+    'Generated files',
+  ),
   {
-    files: ['**/*.{js,mjs,cjs,ts,mts,cts}'],
+    name: 'coding-drills/linter-options',
+    linterOptions: {
+      reportUnusedDisableDirectives: 'error',
+      reportUnusedInlineConfigs: 'error',
+    },
+  },
+  {
+    name: 'coding-drills/javascript',
+    files: ['**/*.{js,mjs,cjs}'],
+    extends: [js.configs.recommended],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: globals.node,
+    },
+  },
+  {
+    name: 'coding-drills/typescript',
+    files: ['**/*.{ts,mts,cts}'],
+    extends: [
+      js.configs.recommended,
+      tseslint.configs.strictTypeChecked,
+      tseslint.configs.stylisticTypeChecked,
+    ],
+    languageOptions: {
+      globals: globals.node,
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
     rules: {
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
-          argsIgnorePattern: '^_', // 忽略以 _ 开头的函数参数
-          varsIgnorePattern: '^_', // 忽略以 _ 开头的变量
-          caughtErrorsIgnorePattern: '^_', // 忽略以 _ 开头的捕获的错误变量
+          argsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
         },
       ],
-      'no-unused-vars': 'off', // 关闭 JS 的 no-unused-vars，使用 TypeScript 版本
     },
   },
-])
+  eslintConfigPrettier,
+)
